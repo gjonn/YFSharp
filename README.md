@@ -1,6 +1,6 @@
 # YFSharp
 
-YFSharp is a .NET 10 Yahoo Finance client inspired by
+YFSharp is a .NET Yahoo Finance client inspired by
 [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance). It keeps familiar
 yfinance concepts such as `Ticker`, `Tickers`, `Download`, search, screeners,
 options chains, quote summaries, calendars, funds, sectors, industries, and
@@ -12,7 +12,8 @@ using Yahoo data in a product.
 
 ## Requirements
 
-- .NET 10 SDK or newer.
+- .NET 8 or newer for consuming the package.
+- .NET 10 SDK or newer for building and testing this repository.
 - Network access to Yahoo Finance endpoints.
 - Optional: `Microsoft.Extensions.DependencyInjection` if you want typed-client
   registration through `services.AddYFSharp(...)`.

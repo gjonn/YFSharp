@@ -1,20 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <PackageId>YFSharp</PackageId>
     <Version>0.1.0</Version>
+    <Authors>gjonn</Authors>
     <Title>YFSharp</Title>
-    <Description>A .NET 10 Yahoo Finance client inspired by ranaroussi/yfinance.</Description>
+    <Description>A .NET Yahoo Finance client inspired by ranaroussi/yfinance.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/gjonn/YFSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/gjonn/YFSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>yahoo-finance;finance;market-data;stocks;dotnet</PackageTags>
+    <PackageReleaseNotes>Initial preview release.</PackageReleaseNotes>
+    <Copyright>Copyright (c) 2026 YFSharp contributors</Copyright>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>

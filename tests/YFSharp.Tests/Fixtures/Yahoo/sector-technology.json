@@ -1,0 +1,68 @@
+{
+  "data": {
+    "key": "technology",
+    "name": "Technology",
+    "symbol": "^YH101",
+    "overview": {
+      "companiesCount": 779,
+      "marketCap": { "raw": 21400000000000, "fmt": "21.4T" },
+      "messageBoardId": "finmb_technology",
+      "description": "Technology companies provide software, semiconductors, hardware, and related services.",
+      "industriesCount": 12,
+      "marketWeight": { "raw": 0.318, "fmt": "31.80%" },
+      "employeeCount": { "raw": 6900000, "fmt": "6.9M" }
+    },
+    "topCompanies": [
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "rating": "Buy",
+        "marketWeight": { "raw": 0.071, "fmt": "7.10%" }
+      },
+      {
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "rating": "Hold",
+        "marketWeight": { "raw": 0.063, "fmt": "6.30%" }
+      }
+    ],
+    "researchReports": [
+      {
+        "id": "tech-2026",
+        "title": "Technology sector outlook"
+      }
+    ],
+    "topETFs": [
+      {
+        "symbol": "XLK",
+        "name": "Technology Select Sector SPDR Fund"
+      }
+    ],
+    "topMutualFunds": [
+      {
+        "symbol": "VITAX",
+        "name": "Vanguard Information Technology Index Fund"
+      }
+    ],
+    "industries": [
+      {
+        "key": "all",
+        "name": "All Industries",
+        "symbol": "^YH101",
+        "marketWeight": { "raw": 1.0, "fmt": "100.00%" }
+      },
+      {
+        "key": "software-infrastructure",
+        "name": "Software - Infrastructure",
+        "symbol": "^YH101010",
+        "marketWeight": { "raw": 0.262, "fmt": "26.20%" }
+      },
+      {
+        "key": "semiconductors",
+        "name": "Semiconductors",
+        "symbol": "^YH101020",
+        "marketWeight": { "raw": 0.244, "fmt": "24.40%" }
+      }
+    ]
+  }
+}

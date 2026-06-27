@@ -1,0 +1,48 @@
+{
+  "data": {
+    "key": "software-infrastructure",
+    "name": "Software - Infrastructure",
+    "symbol": "^YH101010",
+    "sectorKey": "technology",
+    "sectorName": "Technology",
+    "overview": {
+      "companiesCount": 173,
+      "marketCap": { "raw": 7800000000000, "fmt": "7.8T" },
+      "messageBoardId": "finmb_software_infrastructure",
+      "description": "Software infrastructure companies build platforms, cloud services, and enterprise systems.",
+      "marketWeight": { "raw": 0.262, "fmt": "26.20%" },
+      "employeeCount": { "raw": 2100000, "fmt": "2.1M" }
+    },
+    "topCompanies": [
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "rating": "Buy",
+        "marketWeight": { "raw": 0.271, "fmt": "27.10%" }
+      }
+    ],
+    "researchReports": [
+      {
+        "id": "software-2026",
+        "title": "Software infrastructure outlook"
+      }
+    ],
+    "topPerformingCompanies": [
+      {
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "ytdReturn": { "raw": 0.185, "fmt": "18.50%" },
+        "lastPrice": { "raw": 141.75, "fmt": "141.75" },
+        "targetPrice": { "raw": 152.25, "fmt": "152.25" }
+      }
+    ],
+    "topGrowthCompanies": [
+      {
+        "symbol": "NET",
+        "name": "Cloudflare, Inc.",
+        "ytdReturn": { "raw": 0.144, "fmt": "14.40%" },
+        "growthEstimate": { "raw": 0.284, "fmt": "28.40%" }
+      }
+    ]
+  }
+}

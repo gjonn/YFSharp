@@ -1,0 +1,20 @@
+{
+  "marketSummaryResponse": {
+    "result": [
+      {
+        "exchange": "DJI",
+        "shortName": "Dow Jones Industrial Average",
+        "regularMarketPrice": { "raw": 43800.25, "fmt": "43,800.25" },
+        "regularMarketChange": { "raw": 125.5, "fmt": "125.50" },
+        "regularMarketChangePercent": { "raw": 0.00287, "fmt": "0.29%" }
+      },
+      {
+        "exchange": "NMS",
+        "shortName": "Nasdaq",
+        "regularMarketPrice": { "raw": 20500.75, "fmt": "20,500.75" },
+        "regularMarketChange": { "raw": -42.25, "fmt": "-42.25" },
+        "regularMarketChangePercent": { "raw": -0.00206, "fmt": "-0.21%" }
+      }
+    ]
+  }
+}

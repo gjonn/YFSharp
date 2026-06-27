@@ -1,0 +1,27 @@
+{
+  "finance": {
+    "marketTimes": [
+      {
+        "marketTime": [
+          {
+            "id": "us",
+            "name": "U.S. markets",
+            "status": "closed",
+            "message": "U.S. markets closed",
+            "open": "2026-06-26T09:30:00-04:00",
+            "close": "2026-06-26T16:00:00-04:00",
+            "time": "2026-06-26T18:00:00-04:00",
+            "timezone": [
+              {
+                "tz": "America/New_York",
+                "short": "EDT",
+                "long": "Eastern Daylight Time",
+                "gmtoffset": "-14400"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

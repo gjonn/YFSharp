@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YFSharp/YFSharp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YFSharp.Tests/YFSharp.Tests.csproj" />
+  </Folder>
+</Solution>

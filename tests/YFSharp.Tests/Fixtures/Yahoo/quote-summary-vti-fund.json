@@ -1,0 +1,82 @@
+{
+  "quoteSummary": {
+    "result": [
+      {
+        "quoteType": {
+          "quoteType": "ETF",
+          "symbol": "VTI"
+        },
+        "summaryProfile": {
+          "longBusinessSummary": "The fund employs an indexing investment approach designed to track the performance of the total U.S. stock market."
+        },
+        "fundProfile": {
+          "categoryName": "Large Blend",
+          "family": "Vanguard",
+          "legalType": "Exchange Traded Fund",
+          "feesExpensesInvestment": {
+            "annualReportExpenseRatio": { "raw": 0.0003, "fmt": "0.03%" },
+            "annualHoldingsTurnover": { "raw": 0.04, "fmt": "4.00%" },
+            "totalNetAssets": { "raw": 1730000000000, "fmt": "1.73T" }
+          },
+          "feesExpensesInvestmentCat": {
+            "annualReportExpenseRatio": { "raw": 0.0075, "fmt": "0.75%" },
+            "annualHoldingsTurnover": { "raw": 0.17, "fmt": "17.00%" },
+            "totalNetAssets": { "raw": 5500000000, "fmt": "5.5B" }
+          }
+        },
+        "topHoldings": {
+          "cashPosition": { "raw": 0.0125, "fmt": "1.25%" },
+          "stockPosition": { "raw": 0.9825, "fmt": "98.25%" },
+          "bondPosition": { "raw": 0.0, "fmt": "0.00%" },
+          "preferredPosition": { "raw": 0.0, "fmt": "0.00%" },
+          "convertiblePosition": { "raw": 0.0, "fmt": "0.00%" },
+          "otherPosition": { "raw": 0.005, "fmt": "0.50%" },
+          "holdings": [
+            {
+              "symbol": "AAPL",
+              "holdingName": "Apple Inc.",
+              "holdingPercent": { "raw": 0.061, "fmt": "6.10%" }
+            },
+            {
+              "symbol": "MSFT",
+              "holdingName": "Microsoft Corporation",
+              "holdingPercent": { "raw": 0.055, "fmt": "5.50%" }
+            }
+          ],
+          "equityHoldings": {
+            "priceToEarnings": { "raw": 24.1, "fmt": "24.1" },
+            "priceToEarningsCat": { "raw": 23.5, "fmt": "23.5" },
+            "priceToBook": { "raw": 4.6, "fmt": "4.6" },
+            "priceToBookCat": { "raw": 4.1, "fmt": "4.1" },
+            "priceToSales": { "raw": 2.8, "fmt": "2.8" },
+            "priceToSalesCat": { "raw": 2.4, "fmt": "2.4" },
+            "priceToCashflow": { "raw": 16.2, "fmt": "16.2" },
+            "priceToCashflowCat": { "raw": 15.9, "fmt": "15.9" },
+            "medianMarketCap": { "raw": 214000000000, "fmt": "214B" },
+            "medianMarketCapCat": { "raw": 198000000000, "fmt": "198B" },
+            "threeYearEarningsGrowth": { "raw": 0.089, "fmt": "8.90%" },
+            "threeYearEarningsGrowthCat": { "raw": 0.074, "fmt": "7.40%" }
+          },
+          "bondHoldings": {
+            "duration": { "raw": 0.0, "fmt": "0.0" },
+            "durationCat": { "raw": 0.0, "fmt": "0.0" },
+            "maturity": { "raw": 0.0, "fmt": "0.0" },
+            "maturityCat": { "raw": 0.0, "fmt": "0.0" },
+            "creditQuality": { "raw": 0.0, "fmt": "0.0" },
+            "creditQualityCat": { "raw": 0.0, "fmt": "0.0" }
+          },
+          "bondRatings": [
+            { "aaa": 0.0 },
+            { "aa": 0.0 }
+          ],
+          "sectorWeightings": [
+            { "technology": 0.303 },
+            { "financial_services": 0.129 },
+            { "healthcare": 0.112 }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

@@ -1,11 +1,14 @@
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace YFSharp;
 
 public static class YFSharpServiceCollectionExtensions
 {
+    private const string HttpClientName = "YFSharp";
+
     public static IHttpClientBuilder AddYFSharp(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -39,7 +42,7 @@ public static class YFSharpServiceCollectionExtensions
     {
         services.Replace(ServiceDescriptor.Singleton(options));
 
-        var builder = services.AddHttpClient<YahooFinanceClient>((serviceProvider, httpClient) =>
+        var builder = services.AddHttpClient(HttpClientName, (serviceProvider, httpClient) =>
         {
             var clientOptions = serviceProvider.GetRequiredService<YahooFinanceClientOptions>();
             httpClient.Timeout = clientOptions.RequestTimeout;
@@ -61,6 +64,16 @@ public static class YFSharpServiceCollectionExtensions
             }
 
             return handler;
+        });
+
+        services.TryAddTransient(serviceProvider =>
+        {
+            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient(HttpClientName);
+            var clientOptions = serviceProvider.GetRequiredService<YahooFinanceClientOptions>();
+            var logger = serviceProvider.GetService<ILogger<YahooFinanceClient>>();
+
+            return new YahooFinanceClient(httpClient, clientOptions, logger);
         });
 
         services.TryAddTransient<IYahooFinanceClient>(serviceProvider =>

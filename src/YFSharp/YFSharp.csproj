@@ -6,20 +6,24 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <PackageId>YFSharp</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>gjonn</Authors>
     <Title>YFSharp</Title>
     <Description>A .NET Yahoo Finance client inspired by ranaroussi/yfinance.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/gjonn/YFSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/gjonn/YFSharp.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>yahoo-finance;finance;market-data;stocks;dotnet</PackageTags>
-    <PackageReleaseNotes>Initial preview release.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added resilient multi-symbol downloads, structured diagnostics, XML docs, package validation, raw JSON helpers, stronger request validation, and a live-data fix for quote-summary module casing.</PackageReleaseNotes>
     <Copyright>Copyright (c) 2026 YFSharp contributors</Copyright>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <EnablePackageValidation>true</EnablePackageValidation>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
@@ -27,11 +31,14 @@
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../CHANGELOG.md" Pack="true" PackagePath="/" />
     <None Include="../../LICENSE" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

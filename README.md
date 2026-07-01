@@ -155,11 +155,21 @@ var quotes = await tickers.QuotesAsync();
 var histories = await tickers.DownloadAsync(
     HistoryRequest.ForPeriod("1mo"),
     maxConcurrency: 4);
+
+var resilient = await tickers.TryDownloadAsync(
+    HistoryRequest.ForPeriod("1mo"),
+    maxConcurrency: 4);
+
+foreach (var failure in resilient.Errors.Values)
+{
+    Console.WriteLine($"{failure.Symbol}: {failure.Message}");
+}
 ```
 
 `DownloadAsync` returns a dictionary keyed by normalized symbol. Use
 `HistoricalData.ToCsv(...)` or `HistoricalData.GroupByTicker(...)` when you want
-tabular output.
+tabular output. `TryDownloadAsync` keeps successful symbols and returns
+per-symbol errors instead of failing the whole batch.
 
 ### Quote Summary and Fundamentals
 
@@ -265,6 +275,23 @@ await foreach (var price in stream.StreamAsync(["AAPL", "MSFT"]))
 `SubscribeAsync`, `UnsubscribeAsync`, reconnect delay configuration, and
 subscription refreshes.
 
+### Diagnostics
+
+`YahooFinanceClient` emits structured logs through `ILogger<YahooFinanceClient>`
+when logging is available through dependency injection or supplied directly to a
+constructor. Logs include endpoint paths, status codes, elapsed time, retry
+attempts, crumb refreshes, and per-symbol resilient download failures. Query
+strings are intentionally omitted because crumb values may be sensitive.
+
+### Raw JSON Conventions
+
+YFSharp typed models expose stable Yahoo fields directly and keep Yahoo's wider
+or fluid payloads available through `Raw`, `AdditionalData`, or module
+dictionaries. Raw `JsonElement` values are cloned before the source document is
+disposed. A default `JsonElement` with `ValueKind == Undefined` means no raw
+payload was available. `YahooJsonConventions` has small helpers for checking raw
+elements and reading extension data.
+
 ## API Map
 
 | Area | Entry points |
@@ -272,7 +299,7 @@ subscription refreshes.
 | Client | `YahooFinanceClient`, `IYahooFinanceClient`, `YF` |
 | Facades | `Ticker`, `Tickers`, `Sector`, `Industry`, `Calendars` |
 | Quotes | `GetQuoteAsync`, `GetQuotesAsync`, `Ticker.QuoteAsync` |
-| History | `GetHistoryAsync`, `DownloadAsync`, `Ticker.HistoryAsync`, `Tickers.DownloadAsync` |
+| History | `GetHistoryAsync`, `DownloadAsync`, `TryDownloadAsync`, `Ticker.HistoryAsync`, `Tickers.DownloadAsync`, `Tickers.TryDownloadAsync` |
 | Quote summary | `GetQuoteSummaryAsync`, `Ticker.GetInfoAsync`, financial statement, analysis, holder, insider, recommendation, filing, and ESG helpers |
 | Funds | `Ticker.FundsDataAsync` and fund-specific helper methods |
 | Options | `GetOptionsAsync`, `GetOptionExpirationsAsync`, `Ticker.OptionChainAsync`, `Ticker.OptionsAsync` |
@@ -322,9 +349,11 @@ Implemented:
 - Historical chart data with adjustment, repair, validation, exchange-time
   handling, and CSV export helpers.
 - Multi-symbol downloads with bounded concurrency.
+- Resilient multi-symbol downloads with per-symbol error reporting.
 - Quote snapshots, quote summaries, typed fundamentals, analyst data, holders,
   insiders, filings, sustainability, funds, options, search, lookup, screeners,
   calendars, market status, sectors, industries, and websocket streaming.
 - Cookie/crumb acquisition and optional in-memory or file-backed auth state.
+- Structured diagnostics through `ILogger<YahooFinanceClient>`.
 - Unit tests with mocked Yahoo responses and saved-payload contract fixtures.
 - Optional live tests behind `YFSHARP_LIVE_TESTS=1`.

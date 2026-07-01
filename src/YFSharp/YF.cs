@@ -26,6 +26,13 @@ public static class YF
         CancellationToken cancellationToken = default) =>
         SharedClient.Value.DownloadAsync(symbols, request, maxConcurrency, cancellationToken);
 
+    public static Task<DownloadResult> TryDownloadAsync(
+        IEnumerable<string> symbols,
+        HistoryRequest? request = null,
+        int maxConcurrency = 8,
+        CancellationToken cancellationToken = default) =>
+        SharedClient.Value.TryDownloadAsync(symbols, request, maxConcurrency, cancellationToken);
+
     public static Task<SearchResult> SearchAsync(
         string query,
         SearchOptions? options = null,

@@ -22,4 +22,10 @@ public sealed class Tickers
         int maxConcurrency = 8,
         CancellationToken cancellationToken = default) =>
         _client.DownloadAsync(Symbols, request, maxConcurrency, cancellationToken);
+
+    public Task<DownloadResult> TryDownloadAsync(
+        HistoryRequest? request = null,
+        int maxConcurrency = 8,
+        CancellationToken cancellationToken = default) =>
+        _client.TryDownloadAsync(Symbols, request, maxConcurrency, cancellationToken);
 }

@@ -1,16 +1,18 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using YFSharp.Internal;
 using YFSharp.Models;
 
 namespace YFSharp;
 
-public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
+public sealed partial class YahooFinanceClient : IYahooFinanceClient, IDisposable
 {
     private static readonly HashSet<string> SupportedHistoryPeriods = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -63,6 +65,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
     private readonly HttpClient _httpClient;
     private readonly bool _disposeHttpClient;
     private readonly YahooFinanceClientOptions _options;
+    private readonly ILogger<YahooFinanceClient> _logger;
     private readonly SemaphoreSlim _authLock = new(1, 1);
     private readonly object _cookieLock = new();
     private readonly Dictionary<string, string> _cookies = new(StringComparer.OrdinalIgnoreCase);
@@ -76,116 +79,51 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
     }
 
     public YahooFinanceClient(YahooFinanceClientOptions options)
-        : this(CreateHttpClient(options), disposeHttpClient: true, options)
+        : this(options, NullLogger<YahooFinanceClient>.Instance)
+    {
+    }
+
+    public YahooFinanceClient(YahooFinanceClientOptions options, ILogger<YahooFinanceClient> logger)
+        : this(CreateHttpClient(options), disposeHttpClient: true, options, logger)
     {
     }
 
     public YahooFinanceClient(HttpClient httpClient, YahooFinanceClientOptions? options = null)
-        : this(httpClient, disposeHttpClient: false, options)
+        : this(httpClient, disposeHttpClient: false, options, NullLogger<YahooFinanceClient>.Instance)
     {
     }
 
-    private YahooFinanceClient(HttpClient httpClient, bool disposeHttpClient, YahooFinanceClientOptions? options)
+    internal YahooFinanceClient(
+        HttpClient httpClient,
+        YahooFinanceClientOptions? options,
+        ILogger<YahooFinanceClient>? logger)
+        : this(httpClient, disposeHttpClient: false, options, logger)
     {
+    }
+
+    private YahooFinanceClient(
+        HttpClient httpClient,
+        bool disposeHttpClient,
+        YahooFinanceClientOptions? options,
+        ILogger<YahooFinanceClient>? logger)
+    {
+        ArgumentNullException.ThrowIfNull(httpClient);
+
         _httpClient = httpClient;
         _disposeHttpClient = disposeHttpClient;
         _options = options ?? new YahooFinanceClientOptions();
+        _logger = logger ?? NullLogger<YahooFinanceClient>.Instance;
         ValidateOptions(_options);
 
         ApplyDefaultRequestHeaders(_httpClient, _options);
-    }
-
-    private static HttpClient CreateHttpClient(YahooFinanceClientOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        ValidateOptions(options);
-
-        var handler = new HttpClientHandler();
-        if (options.Proxy is not null)
-        {
-            handler.Proxy = options.Proxy;
-            handler.UseProxy = true;
-        }
-
-        handler.AutomaticDecompression =
-            DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-
-        return new HttpClient(handler, disposeHandler: true)
-        {
-            Timeout = options.RequestTimeout
-        };
-    }
-
-    private static void ValidateOptions(YahooFinanceClientOptions options)
-    {
-        if (options.RequestTimeout <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(YahooFinanceClientOptions.RequestTimeout),
-                "Request timeout must be greater than zero.");
-        }
-
-        if (options.MaxRetries < 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(YahooFinanceClientOptions.MaxRetries),
-                "Max retries cannot be negative.");
-        }
-
-        if (options.AuthStateTtl < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(YahooFinanceClientOptions.AuthStateTtl),
-                "Auth state TTL cannot be negative.");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.UserAgent))
-        {
-            throw new ArgumentException(
-                "User agent cannot be empty.",
-                nameof(YahooFinanceClientOptions.UserAgent));
-        }
-
-        if (string.IsNullOrWhiteSpace(options.AcceptLanguage))
-        {
-            throw new ArgumentException(
-                "Accept-Language cannot be empty.",
-                nameof(YahooFinanceClientOptions.AcceptLanguage));
-        }
-
-        ArgumentNullException.ThrowIfNull(options.TimeProvider);
-    }
-
-    internal static void ApplyDefaultRequestHeaders(HttpClient httpClient, YahooFinanceClientOptions options)
-    {
-        if (!httpClient.DefaultRequestHeaders.UserAgent.Any())
-        {
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-        }
-
-        if (!httpClient.DefaultRequestHeaders.AcceptLanguage.Any())
-        {
-            httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd(options.AcceptLanguage);
-        }
-
-        if (!httpClient.DefaultRequestHeaders.Accept.Any())
-        {
-            if (options.RequestProfile == YahooFinanceRequestProfile.Chrome)
-            {
-                httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/javascript, */*; q=0.01");
-            }
-            else
-            {
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.8));
-            }
-        }
     }
 
     public async Task<IReadOnlyList<Quote>> GetQuotesAsync(
         IEnumerable<string> symbols,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(symbols);
+
         var normalizedSymbols = symbols.Select(NormalizeSymbol)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -238,6 +176,8 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         IEnumerable<string> modules,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(modules);
+
         var normalizedSymbol = NormalizeSymbol(symbol);
         var moduleList = modules.Where(m => !string.IsNullOrWhiteSpace(m))
             .Select(m => m.Trim())
@@ -277,7 +217,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         }
 
         var moduleData = result[0].EnumerateObject()
-            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
+            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.OrdinalIgnoreCase);
 
         return new QuoteSummary
         {
@@ -327,6 +267,8 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         int maxConcurrency = 8,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(symbols);
+
         var normalizedSymbols = symbols.Select(NormalizeSymbol)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -400,6 +342,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         }
 
         options ??= new SearchOptions();
+        ValidateSearchOptions(options);
         var uri = BuildUri(
             _options.Query2BaseUrl,
             YahooEndpoints.Search,
@@ -457,6 +400,11 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         if (string.IsNullOrWhiteSpace(query))
         {
             throw new ArgumentException("Lookup query cannot be empty.", nameof(query));
+        }
+
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Lookup count cannot be negative.");
         }
 
         var uri = BuildUri(
@@ -563,6 +511,11 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         if (count is > 250)
         {
             throw new ArgumentOutOfRangeException(nameof(count), "Yahoo limits screener count to 250.");
+        }
+
+        if (count is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Screener count cannot be negative.");
         }
 
         var query = new Dictionary<string, string?>
@@ -951,7 +904,12 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
 
     public Ticker Ticker(string symbol) => new(this, NormalizeSymbol(symbol));
 
-    public Tickers Tickers(IEnumerable<string> symbols) => new(this, symbols.Select(NormalizeSymbol).ToArray());
+    public Tickers Tickers(IEnumerable<string> symbols)
+    {
+        ArgumentNullException.ThrowIfNull(symbols);
+
+        return new(this, symbols.Select(NormalizeSymbol).ToArray());
+    }
 
     public Sector Sector(string key, string region = "US") =>
         new(this, NormalizeDomainKey(key, nameof(key)), NormalizeRegion(region));
@@ -1056,6 +1014,29 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
             Interval = interval,
             Period = period
         };
+    }
+
+    private static void ValidateSearchOptions(SearchOptions options)
+    {
+        if (options.QuotesCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Search quotes count cannot be negative.");
+        }
+
+        if (options.NewsCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Search news count cannot be negative.");
+        }
+
+        if (options.ListsCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Search lists count cannot be negative.");
+        }
+
+        if (options.RecommendedCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Search recommended count cannot be negative.");
+        }
     }
 
     private static string NormalizeHistoryInterval(string? interval)
@@ -1196,6 +1177,8 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         Func<HttpContent>? contentFactory,
         CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Yahoo Finance {Method} {Path} requires crumb retry.", method, uri.AbsolutePath);
+
         var crumb = await GetCrumbAsync(refresh: false, cancellationToken).ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(crumb))
         {
@@ -1207,6 +1190,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
 
             if (!RequiresCrumbRetry(retryResponse.StatusCode))
             {
+                _logger.LogDebug("Yahoo Finance {Method} {Path} succeeded with cached crumb.", method, uri.AbsolutePath);
                 return retryResponse;
             }
         }
@@ -1214,9 +1198,11 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         crumb = await GetCrumbAsync(refresh: true, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(crumb))
         {
+            _logger.LogWarning("Yahoo Finance {Method} {Path} could not acquire a crumb.", method, uri.AbsolutePath);
             return new ResponseContent(HttpStatusCode.Unauthorized, "Unauthorized", "Unable to acquire Yahoo crumb.");
         }
 
+        _logger.LogDebug("Yahoo Finance {Method} {Path} retrying with refreshed crumb.", method, uri.AbsolutePath);
         return await SendWithRateLimitRetriesAsync(
             method,
             WithQueryParameter(uri, "crumb", crumb),
@@ -1245,6 +1231,13 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
                 return response;
             }
 
+            _logger.LogWarning(
+                "Yahoo Finance {Method} {Path} returned 429 on attempt {Attempt} of {MaxAttempts}.",
+                method,
+                uri.AbsolutePath,
+                attempt + 1,
+                _options.MaxRetries + 1);
+
             if (attempt >= _options.MaxRetries)
             {
                 throw new YahooFinanceRateLimitException();
@@ -1265,6 +1258,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
         HttpContent? content,
         CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
         using var request = new HttpRequestMessage(method, uri)
         {
             Content = content
@@ -1279,8 +1273,18 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
 
         var cookiesChanged = CaptureCookies(response);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        stopwatch.Stop();
+
+        _logger.LogDebug(
+            "Yahoo Finance {Method} {Path} returned {StatusCode} in {ElapsedMilliseconds} ms.",
+            method,
+            uri.AbsolutePath,
+            (int)response.StatusCode,
+            stopwatch.Elapsed.TotalMilliseconds);
+
         if (cookiesChanged)
         {
+            _logger.LogDebug("Yahoo Finance {Method} {Path} updated cookie state.", method, uri.AbsolutePath);
             await SaveAuthStateAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -1792,7 +1796,9 @@ public sealed class YahooFinanceClient : IYahooFinanceClient, IDisposable
 
         var exchangeTimezoneName = YahooJson.GetString(meta, "exchangeTimezoneName");
         var priceHint = GetPriceHint(meta);
+#pragma warning disable CS0618
         var shouldRound = request.Round || request.Rounding;
+#pragma warning restore CS0618
         var dividends = ParseEventAmounts(payload, "dividends", "amount");
         var capitalGains = ParseEventAmounts(payload, "capitalGains", "amount");
         var splits = ParseSplitEvents(payload);

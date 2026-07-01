@@ -106,7 +106,7 @@ public sealed class YahooFinanceClientTests
             {
                 AutoAdjust = false,
                 BackAdjust = true,
-                Rounding = true
+                Round = true
             });
         var utcData = await client.GetHistoryAsync(
             "aapl",
@@ -115,7 +115,7 @@ public sealed class YahooFinanceClientTests
                 AutoAdjust = false,
                 BackAdjust = true,
                 IgnoreTimezone = true,
-                Rounding = true
+                Round = true
             });
 
         var bar = exchangeTimeData.Bars.Single();
@@ -1049,6 +1049,99 @@ public sealed class YahooFinanceClientTests
     }
 
     [Fact]
+    public async Task TryDownloadAsync_ReturnsSuccessesAndPerSymbolErrors()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            if (request.Uri.AbsolutePath.Contains("/FAIL", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent("Yahoo failed this symbol.", Encoding.UTF8, "text/plain")
+                };
+            }
+
+            return JsonResponse($$"""
+                {
+                  "chart": {
+                    "result": [{
+                      "meta": {
+                        "currency": "USD",
+                        "exchangeTimezoneName": "America/New_York"
+                      },
+                      "timestamp": [1704067200],
+                      "indicators": {
+                        "quote": [{
+                          "open": [100],
+                          "high": [101],
+                          "low": [99],
+                          "close": [100.5],
+                          "volume": [12345]
+                        }]
+                      }
+                    }],
+                    "error": null
+                  }
+                }
+                """);
+        });
+
+        using var client = new YahooFinanceClient(new HttpClient(handler));
+
+        var result = await client.TryDownloadAsync(["aapl", "fail", "msft"], HistoryRequest.ForPeriod("5d"));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(["AAPL", "MSFT"], result.Histories.Keys.Order(StringComparer.Ordinal).ToArray());
+        Assert.Single(result.Errors);
+        Assert.True(result.Errors.ContainsKey("FAIL"));
+        Assert.IsType<YahooFinanceHttpException>(result.Errors["FAIL"].Exception);
+        Assert.Equal(3, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task InvalidCountsAndUrls_FailBeforeRequest()
+    {
+        var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No request expected."));
+        using var client = new YahooFinanceClient(new HttpClient(handler));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.SearchAsync("msft", new SearchOptions { QuotesCount = -1 }));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.LookupAsync("msft", count: -1));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.ScreenAsync(PredefinedScreeners.DayGainers, count: -1));
+        Assert.Throws<ArgumentException>(() => new YahooFinanceClient(new YahooFinanceClientOptions
+        {
+            Query1BaseUrl = "ftp://query1.finance.yahoo.com"
+        }));
+
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public void YahooJsonConventions_WorkWithRawAndAdditionalData()
+    {
+        using var document = JsonDocument.Parse("""{"customField":42}""");
+        var quote = new Quote
+        {
+            Symbol = "AAPL",
+            AdditionalData = new Dictionary<string, JsonElement>
+            {
+                ["customField"] = document.RootElement.GetProperty("customField").Clone()
+            }
+        };
+
+        Assert.False(YahooJsonConventions.IsDefined(default));
+        Assert.True(YahooJsonConventions.IsDefined(document.RootElement));
+        Assert.True(YahooJsonConventions.HasStructuredValue(document.RootElement));
+        Assert.True(YahooJsonConventions.TryGetAdditionalData(
+            quote.AdditionalData,
+            "customField",
+            out var value));
+        Assert.Equal(42, value.GetInt32());
+    }
+
+    [Fact]
     public async Task GetQuoteAsync_PersistsAndReusesCookieAndCrumb()
     {
         var store = new InMemoryYahooFinanceAuthStore();
@@ -1336,6 +1429,35 @@ public sealed class YahooFinanceClientTests
         Assert.Equal(18.4m, summary.EsgScores?.TotalEsg);
         Assert.Equal("Customer Incidents", summary.EsgScores?.RelatedControversy.Single());
         Assert.Equal("/v10/finance/quoteSummary/AAPL", handler.Requests.Single().Uri.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task GetQuoteSummaryAsync_MatchesModulesCaseInsensitively()
+    {
+        var handler = new StubHttpMessageHandler(_ => JsonResponse("""
+            {
+              "quoteSummary": {
+                "result": [{
+                  "cashflowStatementHistory": {
+                    "cashflowStatements": [{
+                      "endDate": { "raw": 1767139200, "fmt": "2025-12-31" },
+                      "totalCashFromOperatingActivities": { "raw": 110000000000, "fmt": "110B" }
+                    }]
+                  }
+                }],
+                "error": null
+              }
+            }
+            """));
+
+        using var client = new YahooFinanceClient(new HttpClient(handler));
+
+        var summary = await client.GetQuoteSummaryAsync("AAPL", [QuoteSummaryModules.CashFlowStatementHistory]);
+        var module = summary.GetModule<CashFlowStatementModule>(QuoteSummaryModules.CashFlowStatementHistory);
+
+        Assert.NotNull(module);
+        Assert.Single(module.CashflowStatements);
+        Assert.Equal(110000000000m, module.CashflowStatements.Single().TotalCashFromOperatingActivities);
     }
 
     [Fact]

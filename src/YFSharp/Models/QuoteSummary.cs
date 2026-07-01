@@ -8,7 +8,7 @@ public sealed record QuoteSummary
     public string Symbol { get; init; } = string.Empty;
 
     public IReadOnlyDictionary<string, JsonElement> Modules { get; init; } =
-        new Dictionary<string, JsonElement>();
+        new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
 
     public bool TryGetModule(string moduleName, out JsonElement module) =>
         Modules.TryGetValue(moduleName, out module);

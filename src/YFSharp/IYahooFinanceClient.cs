@@ -27,6 +27,12 @@ public interface IYahooFinanceClient
         int maxConcurrency = 8,
         CancellationToken cancellationToken = default);
 
+    Task<DownloadResult> TryDownloadAsync(
+        IEnumerable<string> symbols,
+        HistoryRequest? request = null,
+        int maxConcurrency = 8,
+        CancellationToken cancellationToken = default);
+
     Task<OptionChain> GetOptionsAsync(
         string symbol,
         DateOnly? expiration = null,
